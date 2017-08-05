@@ -5,7 +5,7 @@ This is the main server code of the swiss knife dns
 import logging
 import SocketServer
 import dnslib
-
+ 
 
 
 def get_logger_name(dns_zone=None):
@@ -28,7 +28,7 @@ The overall look of the dict will look something like.
 '''
 
 def dns_zone_locator(dns_zone):
-    return processing_d.get(dns_zone,None)
+    return processing_d.get(dns_zone,[])
 
 class DNSRequestHandler(SocketServer.BaseRequestHandler):
 
@@ -39,8 +39,6 @@ class DNSRequestHandler(SocketServer.BaseRequestHandler):
         lgr=logging.getLogger(get_logger_name(self.get_dns_zone()))
         lgr.log(level,msg)
         
-
-    
     def get_dns_zone(self):
         '''
         return the current request dns zone
@@ -50,12 +48,18 @@ class DNSRequestHandler(SocketServer.BaseRequestHandler):
             return None
         
         return self.dns_zone
-        
+
+    def parse_request_data(self):
+        '''
+        Implematation of parsing request data and making it a parsed dns data
+        '''
+        raise NotImplemented
+    
     def read_data(self):
         '''
         Read data from input stream
         '''
-        raise NotImplementedError
+        self.dns_data=self.parse_request_data()
 
     def write_data(self):
         '''
@@ -66,11 +70,21 @@ class DNSRequestHandler(SocketServer.BaseRequestHandler):
         '''
         Process the data provided by the user, self.dns_request is assumed to be added byt other function 
         '''
-        raise NotImplemented
+        for dns_handler_module in dns_zone_locator():
+            try:
+                dns_handler_module()
+        
+        return self.dns_data
     def handle(self):
         '''
         The actual handling code 
         '''
-        try:
-            data=self.read()
-        
+        import pdb
+        pdb.set_trace()
+        data=self.request[0].strip()
+        pdb.set_trace()
+        p_data=dnslib.DNSRecord.parse(data)
+
+
+class UDPDNSRequestHandler(DNSRequestHandler):
+    
