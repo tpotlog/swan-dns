@@ -4,13 +4,15 @@ This is the main server code of the swiss knife dns
 
 import logging
 import SocketServer
+import dnslib
+
 
 
 def get_logger_name(dns_zone=None):
     '''
     Return the logger name of a dns zone
     '''
-    return 'sndns'
+    return 'swan-dns'
 
 
 processing_d={}
@@ -25,7 +27,8 @@ The overall look of the dict will look something like.
 }
 '''
 
-
+def dns_zone_locator(dns_zone):
+    return processing_d.get(dns_zone,None)
 
 class DNSRequestHandler(SocketServer.BaseRequestHandler):
 
@@ -36,7 +39,8 @@ class DNSRequestHandler(SocketServer.BaseRequestHandler):
         lgr=logging.getLogger(get_logger_name(self.get_dns_zone()))
         lgr.log(level,msg)
         
-        
+
+    
     def get_dns_zone(self):
         '''
         return the current request dns zone
@@ -47,20 +51,22 @@ class DNSRequestHandler(SocketServer.BaseRequestHandler):
         
         return self.dns_zone
         
-    def read(self):
+    def read_data(self):
         '''
         Read data from input stream
         '''
         raise NotImplementedError
 
-    def write(self):
+    def write_data(self):
         '''
         Send Data to output stream
         '''
         raise NotImplemented
     def process(self):
-        
-        
+        '''
+        Process the data provided by the user, self.dns_request is assumed to be added byt other function 
+        '''
+        raise NotImplemented
     def handle(self):
         '''
         The actual handling code 
