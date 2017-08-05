@@ -5,9 +5,9 @@ This is the main server code of the swiss knife dns
 import logging
 import SocketServer
 import dnslib
+from swan_errors.exceptions import SWAN_StopProcessingRequest 
+
  
-
-
 def get_logger_name(dns_zone=None):
     '''
     Return the logger name of a dns zone
@@ -70,21 +70,29 @@ class DNSRequestHandler(SocketServer.BaseRequestHandler):
         '''
         Process the data provided by the user, self.dns_request is assumed to be added byt other function 
         '''
+        #TODO:Grab the zone
         for dns_handler_module in dns_zone_locator():
             try:
                 dns_handler_module()
-        
+            except SWAN_StopProcessingRequest:
+                '''
+                Stop processing and the response we have achived so far
+                '''
+                break
         return self.dns_data
     def handle(self):
         '''
         The actual handling code 
         '''
-        import pdb
-        pdb.set_trace()
-        data=self.request[0].strip()
-        pdb.set_trace()
-        p_data=dnslib.DNSRecord.parse(data)
-
+        self.read_data()
+        
 
 class UDPDNSRequestHandler(DNSRequestHandler):
+
+    def parse_request_data(self):
+        '''
+        Parse data for udp
+        '''
+        return dnslib.DNSRecord.parse(self.request[0].strip())
+
     
