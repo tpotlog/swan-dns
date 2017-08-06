@@ -5,7 +5,7 @@ This is the main server code of the swiss knife dns
 import logging
 import SocketServer
 import dnslib
-from swandns.swan_errors.exceptions import SWAN_StopProcessingRequest 
+from swandns.swan_errors.exceptions import SWAN_StopProcessingRequest,SWAN_DNS_Exception
 from swandns.utils.parsing import get_qtype
 
  
@@ -15,6 +15,20 @@ def get_logger_name(dns_zone=None):
     '''
     return 'swan-dns'
 
+
+_server_inet_family={'udp':
+                     {'server':SocketServer.ThreadingUDPServer,
+                      'handler':UDPDNSRequestHandler
+                     }}
+'''
+Mapping between server inet family and server+handler.
+To add new inet_family/handler simply add the addtional values to the dict
+'''
+
+_server=None
+'''
+Current running server instance 
+'''
 
 processing_d={}
 '''
@@ -103,4 +117,24 @@ class UDPDNSRequestHandler(DNSRequestHandler):
         '''
         return dnslib.DNSRecord.parse(self.request[0].strip())
 
+
+def get_server(address='0.0.0.0',port=5053,inet_family='udp',new=False):
+    '''
+    return an instance of a running server or return currently running server if 
+    a) This is the first time get_server is called
+    b) the new attribute is set to true
+    '''
+    if not inet_family in _server_inet_family:
+        raise SWAN_UnkownInetFamily('Unkown inet family %s' %inet_family)
+        
+    if (_server is None) or new:
+        _server_meta=_server_inet_family[inet_family]
+        new_server=_server_meta['server']((address,port),_server_meta['handler'])
+        if _server is None:
+            _server=new_server
+        return new_server
+    return _server
+    
+        
+        
     

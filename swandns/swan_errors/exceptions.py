@@ -14,3 +14,10 @@ class SWAN_StopProcessingRequest(SWAN_DNS_Exception):
     processing is no longer needed and an answer should be returned to the sender
     '''
     pass
+
+class SWAN_UnkownInetFamily(SWAN_DNS_Exception):
+    '''
+    An exception which indicate that the server was started with unkown inet_family value 
+    '''
+
+    pass
