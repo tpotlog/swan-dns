@@ -6,6 +6,7 @@ import logging
 import SocketServer
 import dnslib
 from swan_errors.exceptions import SWAN_StopProcessingRequest 
+from utils.parsing import get_qtype
 
  
 def get_logger_name(dns_zone=None):
@@ -61,31 +62,38 @@ class DNSRequestHandler(SocketServer.BaseRequestHandler):
         '''
         self.dns_data=self.parse_request_data()
 
+        
     def write_data(self):
         '''
         Send Data to output stream
         '''
         raise NotImplemented
+
     def process(self):
         '''
         Process the data provided by the user, self.dns_request is assumed to be added byt other function 
         '''
-        #TODO:Grab the zone
-        for dns_handler_module in dns_zone_locator():
+        dns_zone_modules=parsing.get_zone_from_label(self.dns_data)
+        #TODO: Find better way to do this (consider record type)
+        if not dns_zone_modules:
+            dns_zone_modules=parsing.get_dns_label(self.dns_data)
+        for dns_handler_module in dns_zone_locator(parsing.get_zone_from_label(self.dns_data)):
             try:
-                dns_handler_module()
+                dns_handler_module(self.dns_data)
             except SWAN_StopProcessingRequest:
                 '''
                 Stop processing and the response we have achived so far
                 '''
                 break
-        return self.dns_data
+            #TODO: Generic Exception Handling
+    
     def handle(self):
         '''
         The actual handling code 
         '''
         self.read_data()
-        
+        self.process()
+        self.write_data()
 
 class UDPDNSRequestHandler(DNSRequestHandler):
 
