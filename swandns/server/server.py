@@ -5,7 +5,7 @@ This is the main server code of the swiss knife dns
 import logging
 import SocketServer
 import dnslib
-from swandns.swan_errors.exceptions import SWAN_StopProcessingRequest,SWAN_DNS_Exception
+from swandns.swan_errors.exceptions import SWAN_StopProcessingRequest,SWAN_DNS_Exception,SWAN_SkipProcessing
 from swandns.utils.parsing import get_qtype
 
  
@@ -32,18 +32,17 @@ Current running server instance
 
 processing_d={}
 '''
-The processing_d is a dictionary holding all the modules which will process each dns zone.
-The overall look of the dict will look something like.
+The processing_d is a dictionary holding all the modules which will
+process each dns zone.  The overall look of the dict will look
+something like.
 
-{
-'this.is.the.zone.x':[<module object 1>,<module object 2>.....
-
+{ 'this.is.the.zone.x':[<module object 1>,<module object 2>.....
 
 }
 '''
 
 def dns_zone_locator(dns_zone):
-    return processing_d.get(dns_zone,[])
+       return processing_d.get(dns_zone,[])
 
 class DNSRequestHandler(SocketServer.BaseRequestHandler):
 
@@ -99,7 +98,15 @@ class DNSRequestHandler(SocketServer.BaseRequestHandler):
                 Stop processing and the response we have achived so far
                 '''
                 break
-            #TODO: Generic Exception Handling
+            except SWAN_SkipProcessing:
+                '''
+                Skip processing of this module
+                '''
+                pass
+            except:
+                self.log('Error occured processing dns label %s' parsing.get_dns_label(self.dns_data))
+                #TODO:Add warn/debug stacktrace log printing
+                break
     
     def handle(self):
         '''

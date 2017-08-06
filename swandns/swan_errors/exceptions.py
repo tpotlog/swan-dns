@@ -21,3 +21,9 @@ class SWAN_UnkownInetFamily(SWAN_DNS_Exception):
     '''
 
     pass
+
+class SWAN_SkipProcessing(SWAN_DNS_Exception):
+    '''
+    An exception which indicates that a module processing should be skipped.
+    '''
+    pass
