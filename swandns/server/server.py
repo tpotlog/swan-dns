@@ -5,8 +5,8 @@ This is the main server code of the swiss knife dns
 import logging
 import SocketServer
 import dnslib
-from swan_errors.exceptions import SWAN_StopProcessingRequest 
-from utils.parsing import get_qtype
+from swandns.swan_errors.exceptions import SWAN_StopProcessingRequest 
+from swandns.utils.parsing import get_qtype
 
  
 def get_logger_name(dns_zone=None):
