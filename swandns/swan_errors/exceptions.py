@@ -27,3 +27,15 @@ class SWAN_SkipProcessing(SWAN_DNS_Exception):
     An exception which indicates that a module processing should be skipped.
     '''
     pass
+
+class SWAN_ModuleConfigurationError(SWAN_DNS_Exception):
+    '''
+    An exception which indicates that a module configuration is invalid
+    '''
+    pass
+
+class SWAN_ModuleLoadError(SWAN_DNS_Exception):
+    '''
+    An exception which indicate that there was a problem loading a module
+    '''
+    pass
