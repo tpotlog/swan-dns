@@ -2,10 +2,11 @@
 Python module to hold DNS processing exceptions 
 '''
 
-class SWAN_DNS_Exception:
+class SWAN_DNS_Exception(Exception):
     '''
     General SWAN DNS exception
     '''
+    pass
 
 class SWAN_StopProcessingRequest(SWAN_DNS_Exception):
     '''
@@ -37,5 +38,23 @@ class SWAN_ModuleConfigurationError(SWAN_DNS_Exception):
 class SWAN_ModuleLoadError(SWAN_DNS_Exception):
     '''
     An exception which indicate that there was a problem loading a module
+    '''
+    pass
+
+class SWAN_NoSuchZoneError(SWAN_DNS_Exception):
+    '''
+    An exception which indicate that a dns server can not resolve a specific zone.
+    '''
+    pass
+
+class SWAN_DropAnswer(SWAN_DNS_Exception):
+    '''
+    An exception which indicates to drop the response and not provide answers to the client 
+    '''
+    pass
+
+class SWAN_ConfigurationError(SWAN_DNS_Exception):
+    '''
+    An exception which indicates that loading the configuration of a server is not valid
     '''
     pass

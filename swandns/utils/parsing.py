@@ -8,7 +8,7 @@ def get_qtype(dns_query):
     Return the query type from a DNS query.
     If the type is not found None is returned
     '''
-    return dnslib.QTYPE(dns_query.q.qtype,None)
+    return dnslib.QTYPE.get(dns_query.q.qtype,None)
 
 def get_dns_label(dns_query):
     '''

@@ -1,43 +1,49 @@
 '''
 Basic class to define the basic resolution module
 '''
-from swandns.swan_errors.exceptions import SWAN_ModuleLoadError,SWAN_ModuleConfigurationError
-import imp
-import os
-import sys
+from swandns.swan_errors.exceptions import SWAN_ModuleLoadError, SWAN_ModuleConfigurationError
+import imp,os,sys
+
 class BaseResolvingModule(object):
     '''
     An object representing base DNS resolving module
     '''
+    def __init__(self,conf,zone_resolver=True):
+        """
+        :param conf: A python dict which holds the resolver module configurations.
+        :param zone_resolver: Does this module serves as DNS resolver (if so than conf['zone'] must be defined).
+        :returns: None.
+        :rtype: None.
 
-    def __init__(self,conf={},zone_resolver=True) :
-        '''
-        @params: conf is a dictionary represnting module configuration.
-        '''
+        """     
         self.conf=conf
         self.setup()
         self.inital_validate()
         if zone_resolver and (not "zone" in conf):
             raise SWAN_ModuleConfigurationError('zone attribute was not provided')
         
-    def _resolve(self,dns_request,request_info):
+    def _resolve(self,dns_request,dns_response,request_info):
         """The actual resolution code
 
-        :param dns_request:  The dns request of object from the typ of dnslib.DNSRequest 
+        :param dns_request:  The dns request of object from the type of dnslib.DNSRequest.
+        :param dns_response: The dns response of object from the type of dnslib.DNSRecord.
         :param request_info: The original request from the SocketServer
-        :returns: 
-        :rtype: 
+        :returns: None.
+        :rtype: None.
         """
+
+        raise NotImplementedError
         
-    def resolve(self,dns_request,request_info):
+    def resolve(self,dns_request,dns_response,request_info):
         """Call the _resolve functions with the paremeters recived.
 
-        :param dns_request: The dns request of object from the typ of dnslib.DNSRequest
+        :param dns_request:  The dns request of object from the type of dnslib.DNSRequest.
+        :param dns_response: The dns request of object from the typ of dnslib.DNSRequest
         :param request_info: The original request from the SocketServer
-        :returns: 
-        :rtype: 
-
+        :returns:  None.
+        :rtype: None.
         """
+        self._resolve(dns_request,dns_response,request_info)
         
     def setup(self):
         '''
@@ -57,21 +63,19 @@ class BaseResolvingModule(object):
         pass
 
 
-def load_module(module_file,config):
+def load_module(module_file, conf):
     """Load a python module and see if it is suitable as dns module
 
     :param module_file: The file which holds the module code.
-    :param config: Python dictionary representing module configurations.
+    :param conf: Python dictionary representing module configurations.
     :returns: Python module representing the module.
     :rtype: object which is from a subclass of BaseResolvingModule
-
     """
-    
     if not os.path.isfile(module_file):
-       '''
-       Does the file exists ? 
-       '''
-       raise SWAN_ModuleLoadError('%s does not exists or is not a file' %module_file)
+        '''
+        Does the file exists ? 
+        '''
+        raise SWAN_ModuleLoadError('%s does not exists or is not a file' %module_file)
     md=None
     if not module_file in sys.modules:
         try:
@@ -96,5 +100,5 @@ def load_module(module_file,config):
         '''
         raise SWAN_ModuleLoadError('The resolver defined at module %s is not from the type of BaseResolvingModule' %module_file)
 
-    return md.resolver(conf=config)
+    return resolver(conf)
     

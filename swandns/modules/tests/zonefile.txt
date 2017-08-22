@@ -1,0 +1,16 @@
+$ORIGIN example.com.
+$TTL 3h
+;Define records.
+example.com. IN SOA ns.example.com username.example.com ( 2007120710 1d 2h 4w 1h )
+example.com. IN NS ns
+@	     IN NS ns2.example2.com.
+@	     IN MX 10  mail01.example.com.
+example.com. IN MX 20 mail02
+; A Records
+example.com. IN A 192.0.2.11 ;IPv4 for example.com.
+example.com. IN A 192.0.2.12 ;IPv4 another for example.com.
+	     IN AAAA 2001:db8:10::1 ; IPv6 for example.com.
+ns 14000     IN A 192.0.2.12 ; IPv4 Address for the ns record.
+	     IN AAAA 2001:db8:10::2 IPv4 Address for ns resord.
+www	     IN CNAME example.com. ; cname for example.com record.
+www2 3600    IN CNAME www ; cname for www cname which leads to example.com.
