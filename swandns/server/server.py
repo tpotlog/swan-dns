@@ -46,13 +46,13 @@ class DNSServerCommon(object):
         :rtype: List.
         """
         zones_map=self.get_zones_map()
-        _zone=str(dnslib.DNSLabel(zone))
-
-        if not _zone in zones_map:
-            raise SWAN_NoSuchZoneError(
-                'The DNS server can not resolve Zone "%s"' %_zone)
-        
-        return zones_map[_zone]
+        _zone=zone.q.qname.idna()
+        if _zone in zones_map:
+            return zones_map[_zone]
+        elif _zone.split('.',1)[-1] in zones_map:
+            return zones_map[_zone.split('.',1)[-1]]
+        raise SWAN_NoSuchZoneError(
+                'The DNS server can not resolve "%s"' %_zone)
 
 class DNS_UDPServer(SocketServer.ThreadingUDPServer,DNSServerCommon):
     '''
@@ -152,16 +152,10 @@ class DNSRequestHandler(SocketServer.BaseRequestHandler):
         '''
         Process the data provided by the user, self.dns_request is assumed to be added byt other function 
         '''
-        dns_zone_modules=get_zone_from_label(self.dns_data)
-        #TODO: Find better way to do this (consider record type)
-        if not dns_zone_modules:
-            dns_zone_modules=get_dns_label(self.dns_data)
         self._gen_response_object()
         try:
-            for dns_handler_module in self.server.locate_resolving_modules(get_zone_from_label(self.dns_data)):
+            for dns_handler_module in self.server.locate_resolving_modules(self.dns_data):
                 try:
-                    import pdb
-                    pdb.set_trace()
                     dns_handler_module.resolve(self.dns_data,self.dns_response,self.request)
                 except SWAN_StopProcessingRequest:
                     '''
@@ -216,7 +210,6 @@ class UDPDNSRequestHandler(DNSRequestHandler):
         :returns: send results
         :rtype: 
         """
-        
         return self.request[1].sendto(self.dns_response.pack(),
                                       self.client_address)
 

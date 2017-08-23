@@ -1,3 +1,7 @@
+'''
+Resolution module based on an existing zonefile
+
+'''
 from swandns.modules import BaseResolvingModule
 from swandns.swan_errors.exceptions import SWAN_ModuleConfigurationError
 import os
@@ -47,10 +51,40 @@ class ZoneFileResolverModule(BaseResolvingModule):
         for rr in self.zone_parser:
             self._set_rr_map_record(rr)
 
+    def get_all_records_of(self,record_type):
+        """Get all the records from the type of record_type 
+
+        :param record_type: The record type
+        :returns: List of records from the type of record_type
+        :rtype: list
+
+        """
+        return self.rrmap.get(record_type,{})
+    def get_record_from_name(self,record_type,record_name):
+        """Return a dns records list or and empty list if no record exists.
+
+        :param record_type: The type of the record
+        :param record_name: The requested record
+        :returns: Dns record that would be sent to the client
+        :rtype: list of dnslib.DNSRecord or []
+
+        """
+        records_types=[record_type]
+        if record_type != 'CNAME':
+            records_types.append('CNAME')
+        records=[]
+        for tp in records_types:
+            rec=self.get_all_records_of(record_type=tp).get(record_name,None)
+            if rec:
+                records.append(rec)
+        return records
+    def _resolve(self,dns_request,dns_response,request_info):
+        qtype=dnslib.QTYPE[dns_request.q.qtype]
+        qname=str(dns_request.q.qname)
+        answer=self.get_record_from_name(qtype,qname)
+        for an in answer:
+            dns_response.add_answer(an)
         
-    def _resolve(dns_request,dns_response,request_info):
-        import pdb
-        pdb.set_trace()
-        
+            
         
 resolver=ZoneFileResolverModule
