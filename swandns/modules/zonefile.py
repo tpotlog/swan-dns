@@ -71,6 +71,9 @@ class ZoneFileResolverModule(BaseResolvingModule):
         """
         records_types=[record_type]
         if record_type != 'CNAME':
+            '''
+            We add CNAME records for better resolution.
+            '''
             records_types.append('CNAME')
         records=[]
         for tp in records_types:
@@ -78,6 +81,7 @@ class ZoneFileResolverModule(BaseResolvingModule):
             if rec:
                 records.append(rec)
         return records
+    
     def _resolve(self,dns_request,dns_response,request_info):
         qtype=dnslib.QTYPE[dns_request.q.qtype]
         qname=str(dns_request.q.qname)

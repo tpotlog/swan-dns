@@ -2,7 +2,7 @@
 This module will hold utils to load a server and setup environment from a configuration source
 '''
 
-import ConfigParser,os
+import ConfigParser,os,sys
 from swandns.swan_errors.exceptions import SWAN_ConfigurationError
 from swandns.utils.swanlogs import start_logger
 from swandns.server.server import get_server
@@ -15,7 +15,8 @@ _server_defaults={
     'port':53,
     'address':'0.0.0.0',
     'loglevel':'info',
-    'logfile':'/var/log/swan-dns.log'
+    'logfile':'/var/log/swan-dns.log',
+    'modules_paths':''
 }
 
 
@@ -32,6 +33,7 @@ def load_from_ini_file(config_file):
     port=53 # Which port to listen on 
     logfile=/var/log/swan-dns.log #log file location
     loglevel=info # logging level avaliable are info,warn,debug (case in-sesitive).
+    modules_paths=<list of os paths to search for mudules "," is used as delimiter>
     #Define dns zones this server will resolve at the following format.
     #zone.<dns zone fqdn>=<list of zones to load "," is used as delimiter>.
     # 
@@ -40,7 +42,7 @@ def load_from_ini_file(config_file):
     #prepare resolution modules to be loaded.
     #[module1]
     #type=module
-    #module_file=<path to the module file>
+    #module_name=<python module name to load>
     
     ##all the keys and valued defined here will be passed as configurations to the module.
     ##If the zone attribute is defined it will be replaced with the right zone of the dns zone 
@@ -53,7 +55,7 @@ def load_from_ini_file(config_file):
     #.
     [zonefile.example.com]
     type=module
-    modulefile=swandns/modules/zonefile.py
+    module_name=zonefile
     zone_file=<path to the zone file>
     
     
@@ -86,7 +88,10 @@ def load_from_ini_file(config_file):
             if not _zn.endswith('.'):
                 _zn+='.'
             zones[_zn]=k[1].split(',')
-
+    if server_config.get('modules_paths'):
+        for pth in server_config['modules_paths'].split(','):
+            if not pth in sys.path:
+                sys.path.append(pth)
     if server_config['loglevel'].lower() not in ['info','warn','debug']:
         raise SWAN_ConfigurationError('"loglevel" attribute values musr be info,warn or debug %s level is not an acceptable level' %server_config['loglevel'])
     logger=start_logger(filename=server_config['logfile'],level=server_config['loglevel'])
@@ -118,10 +123,9 @@ def load_from_ini_file(config_file):
             #setup the zone
             modconf['zone']=zone
             #load the module
-            md=load_module(module_file=modconf.get('modulefile',None),conf=modconf)
+            md=load_module(module_name=modconf.get('module_name',None),conf=modconf)
             dns_server.set_parsing_modules(zone=zone,parsing_module=md)
             
-        
     return dns_server
         
     

@@ -5,6 +5,7 @@ import sys
 import logging
 import SocketServer
 import dnslib
+import traceback
 from swandns.swan_errors.exceptions import SWAN_StopProcessingRequest,SWAN_DNS_Exception,SWAN_SkipProcessing,SWAN_NoSuchZoneError,SWAN_DropAnswer,SWAN_UnkownInetFamily
 from swandns.utils.parsing import get_qtype,get_dns_label,get_zone_from_label
 from swandns.modules import BaseResolvingModule,load_module
@@ -90,6 +91,25 @@ class DNSRequestHandler(SocketServer.BaseRequestHandler):
 
         """
         self.log(msg,logging.DEBUG)
+    def dump_dns_packets(self,response=True,request=True):
+        """Helper function to dump the content of dns request + response 
+
+        :returns: String of the DNS response & Request
+        :rtype: string
+
+        """
+
+        
+        dump=''
+        if request:
+            if hasattr(self,'dns_data'):
+                dump+='DNS Request:\n----------\n%s' %self.dns_data.toZone()
+        if response:
+            if hasattr(self,'dns_response'):
+                dump+='DNS Response:\n----------\n%s' %self.dns_response.toZone()
+        return dump
+        
+
     def log_warn(self,msg):
         """Log a warning message.
 
@@ -147,12 +167,25 @@ class DNSRequestHandler(SocketServer.BaseRequestHandler):
         Close the connection if needed 
         '''
         raise NotImplementedError
-    
+    def _unexpected_error(self):
+        """This function should be called when we encounter unexpected error.
+           It will dump the stack trace for future debugging.
+
+        :returns: None.
+        :rtype: None.
+
+        """
+        self.log('Unexpected error occured probably a bug')
+        tp,value,tb=sys.exc_info()
+        self.log('\n'.join(['%s' %t for t in traceback.extract_tb(tb)]))
+                
     def process(self):
         '''
         Process the data provided by the user, self.dns_request is assumed to be added byt other function 
         '''
+        self.log_debug('Request From %s ' %str(self.client_address))
         self._gen_response_object()
+        self.log_debug(self.dump_dns_packets(response=False))
         try:
             for dns_handler_module in self.server.locate_resolving_modules(self.dns_data):
                 try:
@@ -161,34 +194,56 @@ class DNSRequestHandler(SocketServer.BaseRequestHandler):
                     '''
                     Stop processing and the response we have achived so far
                     '''
+                    self.log_warn(
+                        'Module %s called SWAN_StopProcessingRequest, No other modules will be called' %str(dns_handler_module))
                     break
                 except SWAN_SkipProcessing:
                     '''
                     Skip processing of this module
                     '''
+                    self.log_warn(
+                        'Module %s called SWAN_SkipProcessing'
+                        %str(dns_handler_module))
                     pass
                 except SWAN_DropAnswer:
                     '''
                     Stop the loop and return from the function causing not to send response to the client
                     '''
+                    self.log_warn(
+                        'Module %s called SWAN_DropAnswer, No response will be sent to the client'
+                        %str(dns_handler_module))
                     return 
                 except:
                     self.log('Error occured processing dns label %s' %get_dns_label(self.dns_data))
-                    #TODO:Add warn/debug stacktrace log printing
                     break
+                
         except SWAN_NoSuchZoneError:
-            tp,value,tb=sys.exc_info()
-            self.log_warn(str(value))
-
+            self.log_warn('DNS zone for dns request %s was not found' %(self.dns_data.q.qname.idna()))
+        except:
+            '''
+            Unkown exception occured this is a bug, server will not return answer 
+            to the client we might provide The worng data
+            '''
+            self._unexpected_error()
+            return
+        
+        #if we reached here sata will be written back to the client.
+        self.log_debug(self.dump_dns_packets(request=False))
         self.write_data()
     
     def handle(self):
         '''
         The actual handling code 
         '''
-        self.read_data()
-        self.process()
-        self.close()
+        try:
+            self.read_data()
+            self.process()
+            self.close()
+        except:
+            '''
+            Handle unexpected errors occured during handling
+            '''
+            self._unexpected_error()
         
 class UDPDNSRequestHandler(DNSRequestHandler):
 

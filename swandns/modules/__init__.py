@@ -63,42 +63,31 @@ class BaseResolvingModule(object):
         pass
 
 
-def load_module(module_file, conf):
+def load_module(module_name, conf):
     """Load a python module and see if it is suitable as dns module
 
-    :param module_file: The file which holds the module code.
+    :param module_name: The python module name to load.
     :param conf: Python dictionary representing module configurations.
     :returns: Python module representing the module.
     :rtype: object which is from a subclass of BaseResolvingModule
     """
-    if not os.path.isfile(module_file):
-        '''
-        Does the file exists ? 
-        '''
-        raise SWAN_ModuleLoadError('%s does not exists or is not a file' %module_file)
     md=None
-    if not module_file in sys.modules:
-        try:
-            '''
-            Try loading from source
-            '''
-            md=imp.load_source(module_file,module_file)
-        except:
-            raise SWAN_ModuleLoadError('Failed to load module %s' %module_file)
-    else:
-        md=sys.modules[module_file]
+    try:
+        md=imp.load_module(module_name,*imp.find_module(module_name))
+    except:
+        raise SWAN_ModuleLoadError('Failed to load module %s' %module_name)
             
     if not hasattr(md,'resolver'):
         '''
         Was the resolver attribute defined for this module ? 
         '''
-        raise SWAN_ModuleLoadError('Module from file %s have not define the "resolver" attribute' %module_file)
+        raise SWAN_ModuleLoadError('Python module  %s have not define the "resolver" attribute' %module_name)
     resolver=md.resolver
     if not issubclass(resolver,BaseResolvingModule):
         '''
         is the resolver attribute is a referance for a class from the type of BaseResolvingModule ?
         '''
-        raise SWAN_ModuleLoadError('The resolver defined at module %s is not from the type of BaseResolvingModule' %module_file)
+        raise SWAN_ModuleLoadError('The resolver defined at module %s is not from the type of BaseResolvingModule' %module_module)
 
     return resolver(conf)
     
