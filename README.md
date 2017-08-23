@@ -14,3 +14,11 @@ with commonly used dns servers/tools.
 Swan-dns stands for Swiss Army Knife DNS Server (yes I know I am missing the K) and got nothing to do with the magnificent bird called swan. 
 
 
+## Requests Flow
+
+The swan-dns handle requests with a multiplexing approach.
+Once a request recived it tries to identify if a zone defined for this server can handle the request.
+If no zone was found than an empty request is returned.
+The following diagram describe that flow.
+
+![Processing Flow](/images/Diag1.png)
