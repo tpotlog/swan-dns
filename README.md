@@ -46,4 +46,4 @@ This means several things.
 * After the last module in the chain finished it's work the response will be sent back to the client.
 
 The following diagram describes the process.
-![Rolling Response](/images/Diag2.png)
+![Rolling Response](/images/Diag3.png)
