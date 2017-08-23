@@ -20,5 +20,15 @@ The swan-dns handle requests with a multiplexing approach.
 Once a request recived it tries to identify if a zone defined for this server can handle the request.
 If no zone was found than an empty request is returned.
 The following diagram describe that flow.
+The numbers are indicating the resolution order.
 
 ![Processing Flow](/images/Diag1.png)
+
+## Resolving modules 
+Resolving modules are the actual resolution code parts of the DNS server.
+Each resolution module is designed to be an zone indpendent code that will do it's work to whatever zone it will need to resolve requests for.
+
+At server startup according to the configuration a resolving module with it's configurations is attached to a chain of processing modules for a specific zone.
+
+The structure of zone relation to the resolution module is described at the following diagram.
+![Processing Flow](/images/Diag2.png)
