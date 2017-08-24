@@ -11,8 +11,8 @@ import time
 
 class DelayResponseResolverModule(BaseResolvingModule):
 
-    def __init__(self,conf,zone_resolver=False):
-        super(DelayResponseResolverModule,self).__init__(conf=conf,zone_resolver=zone_resolver)
+    def __init__(self,conf):
+        super(DelayResponseResolverModule,self).__init__(conf=conf,zone_resolver=False,lock_reslution=False)
 
     def inital_validate(self):
         """Verify configuration input.
@@ -64,9 +64,7 @@ class DelayResponseResolverModule(BaseResolvingModule):
         :rtype: None.
 
         """
-
-        rand_wait=random.randint(self.min_delay,self.max_delay)
-        time.sleep(rand_wait/1000.0)
+        time.sleep(random.randint(self.min_delay,self.max_delay)/1000.0)
             
     def _resolve(self,*k,**kargs):
         self._delay()

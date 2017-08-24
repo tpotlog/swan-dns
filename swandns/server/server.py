@@ -177,7 +177,7 @@ class DNSRequestHandler(SocketServer.BaseRequestHandler):
         """
         self.log('Unexpected error occured probably a bug')
         tp,value,tb=sys.exc_info()
-        self.log('\n'.join(['%s' %t for t in traceback.extract_tb(tb)]))
+        self.log('\n'.join([str(t) for t in traceback.extract_stack()]))
                 
     def process(self):
         '''
@@ -189,7 +189,7 @@ class DNSRequestHandler(SocketServer.BaseRequestHandler):
         try:
             for dns_handler_module in self.server.locate_resolving_modules(self.dns_data):
                 try:
-                    dns_handler_module.resolve(self.dns_data,self.dns_response,self.request)
+                    dns_handler_module.resolve(self.dns_data,self.dns_response,self)
                 except SWAN_StopProcessingRequest:
                     '''
                     Stop processing and the response we have achived so far

@@ -8,8 +8,8 @@ import os
 import dnslib
 
 class ZoneFileResolverModule(BaseResolvingModule):
-    def __init__(self,conf,zone_resolver=True):
-        super(ZoneFileResolverModule,self).__init__(conf=conf,zone_resolver=zone_resolver)
+    def __init__(self,conf):
+        super(ZoneFileResolverModule,self).__init__(conf=conf,zone_resolver=True,lock_reslution=True)
         
     def setup(self):
         self.rrmap={}
