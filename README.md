@@ -31,4 +31,19 @@ Each resolution module is designed to be an zone indpendent code that will do it
 At server startup according to the configuration a resolving module with it's configurations is attached to a chain of processing modules for a specific zone.
 
 The structure of zone relation to the resolution module is described at the following diagram.
-![Processing Flow](/images/Diag2.png)
+![Zone resolvers structure](/images/Diag2.png)
+
+!!! please note that a zone without any resolution module is a possiable scenario but pretty useless since nothing will be resolved.
+
+## Rolling response 
+As mentioned before the resolving modules for each zone are chained together but the code of each does some work related to the resoltion.
+The only connection between the modules chaned together is that the response (and request) data is rolled from one module to the other.
+This means several things.
+
+* Each resoltion module recives the response object which might have been changed by all the modules in front of him in the chain.
+* Each change made by the resolution module is reflected to all the modules following him in the chain.
+* The First module always get an empty response object.
+* After the last module in the chain finished it's work the response will be sent back to the client.
+
+The following diagram describes the process.
+![Rolling Response](/images/Diag3.png)
