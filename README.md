@@ -56,6 +56,18 @@ For example if we would like to have some whitelist module which filters ip addr
 
 # Installation.
 
+## Prerequsites 
+
+Swan-dns requieres the following python packages to work 
+
+* dnslib 
+* ipcalc
+
+Install then anyway you like as long as they are avaliable to load.
+A good option is to use pip form installation.
+
+`pip install dnslib ipcalc`
+
 The swan-dns was written as a complete python package so in theory you can just check out the code add `<path to swan-dns dir>` to your PYTHONPATH.
 Next you will be able to import the swandns package or an other sub package of it.
 
@@ -69,3 +81,76 @@ So all the setup.py options are avaliable.
 1. ```git clone https://github.com/tpotlog/swan-dns.git``` 
 2. ```cd swan-dns``` 
 3. ```python setup.py install [intallation options]``` 
+
+# Running The server
+
+Currently the server supports loading it's configurations from an ini file.
+
+## Ini configuration file format.
+The ini format is as follows.
+
+```ini
+[server]
+###This section holds all the server configurations### 
+address=0.0.0.0 # the ip address to bind to "0.0.0.0" means bind to all.
+port=53 # The dns port to listen to (please make sure you got the right user permissions to user port 53).
+logfile=/var/log/swan-dns.log #path to the log file
+loglevel=info # logging level avaliable are info,warn,debug (case in-sesitive).
+modules_paths=<list of os paths to search for mudules "," is used as delimiter> # those directories are added to the PYTHONPATH
+##Define dns zones this server will resolve at the following format.
+#zone.<dns zone fqdn>=<list of zones section to load "," is used as delimiter>.
+zone.example.com=zonefile.example.com
+
+[zonefile.example.com]
+###This section represent a module###
+type=module
+#the format is as follows 
+#module option:
+#opt1=val1
+#opt2=val2
+##options are documented at module code.
+module_name=zonefile
+zone_file=<path to the zone file>
+```
+
+**Example**
+
+This example demostrates a server with the following charesteristics.
+
+1. Listen on port 5053
+2. Binds to all interfaces.
+3. serving zone example.com using the zone file module.
+
+***zone file (/var/tmp/example.com.zonefile)***
+```zonefile
+$ORIGIN example.com.
+$TTL 3h
+;Define records.
+example.com. IN SOA ns.example.com username.example.com ( 2007120710 1d 2h 4w 1h )
+example.com. IN NS ns
+@	     IN NS ns2.example2.com.
+@	     IN MX 10  mail01.example.com.
+example.com. IN MX 20 mail02
+; A Records
+example.com. IN A 192.0.2.11 ;IPv4 for example.com.
+example.com. IN A 192.0.2.12 ;IPv4 another for example.com.
+	     IN AAAA 2001:db8:10::1 ; IPv6 for example.com.
+ns 14000     IN A 192.0.2.12 ; IPv4 Address for the ns record.
+	     IN AAAA 2001:db8:10::2 IPv4 Address for ns resord.
+www	     IN CNAME example.com. ; cname for example.com record.
+www2 3600 IN CNAME www ; cname for www cname which leads to example.com.
+```
+
+***ini file (/var/tmp/swan-dns.ini)***
+```ini
+[server]
+port=5053
+address=0.0.0.0
+logfile=/var/log/swan-dns.log
+zone.example.com=zonefile.example.com
+
+[zonefile.example.com]
+type=module
+module_name=zonefile
+zone_file=/var/tmp/example.com.zonefile
+```
