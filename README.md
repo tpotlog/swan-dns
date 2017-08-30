@@ -47,3 +47,25 @@ This means several things.
 
 The following diagram describes the process.
 ![Rolling Response](/images/Diag3.png)
+
+Modules can also stop the chain of processing in 2 ways: 
+* Stop the chain and return the dns reponse object which was built so far.
+* Stop the chain and drop the response returning nothing to the client.
+
+For example if we would like to have some whitelist module which filters ip addreses , we should put it as our first module which will stop the chain if a certain ip is not allowed to query the dns server.
+
+# Installation.
+
+The swan-dns was written as a complete python package so in theory you can just check out the code add `<path to swan-dns dir>` to your PYTHONPATH.
+Next you will be able to import the swandns package or an other sub package of it.
+
+To make things a little bit more easy a setup.py script was written.
+
+## Using the setup.py 
+
+The setup.py script was written with python [distutils.core.setup](https://docs.python.org/2/distutils/setupscript.html).
+So all the setup.py options are avaliable.
+
+1. ```git clone https://github.com/tpotlog/swan-dns.git``` 
+2. ```cd swan-dns``` 
+3. ```python setup.py install [intallation options]``` 
