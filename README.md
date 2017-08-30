@@ -146,11 +146,85 @@ www2 3600 IN CNAME www ; cname for www cname which leads to example.com.
 [server]
 port=5053
 address=0.0.0.0
-logfile=/var/log/swan-dns.log
+logfile=/var/tmp/swan-dns.log
 zone.example.com=zonefile.example.com
 
 [zonefile.example.com]
 type=module
-module_name=zonefile
+module_name=swandns/modules/zonefile
 zone_file=/var/tmp/example.com.zonefile
 ```
+Using the python shell 
+
+```shell
+$ python
+Python 2.7.13 (default, Jan 19 2017, 14:48:08) 
+[GCC 6.3.0 20170118] on linux2
+Type "help", "copyright", "credits" or "license" for more information.
+>>> from swandns.utils.config import load_from_ini_file
+>>> dnsserver=load_from_ini_file('/var/tmp/swan-dns.ini')
+>>> dnsserver.serve_forever()
+
+```
+
+Using dig to query the server
+
+```shell
+$ dig example.com -p 5053 @127.0.0.1
+
+; <<>> DiG 9.10.3-P4-Ubuntu <<>> example.com -p 5053 @127.0.0.1
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 5420
+;; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 0
+
+;; QUESTION SECTION:
+;example.com.			IN	A
+
+;; ANSWER SECTION:
+example.com.		10800	IN	A	192.0.2.12
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.1#5053(127.0.0.1)
+;; WHEN: Wed Aug 30 10:43:48 IDT 2017
+;; MSG SIZE  rcvd: 45
+
+$ dig example.com -p 5053 -t ns  @127.0.0.1
+
+; <<>> DiG 9.10.3-P4-Ubuntu <<>> example.com -p 5053 -t ns @127.0.0.1
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 28368
+;; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 0
+
+;; QUESTION SECTION:
+;example.com.			IN	NS
+
+;; ANSWER SECTION:
+example.com.		10800	IN	NS	ns2.example2.com.
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.1#5053(127.0.0.1)
+;; WHEN: Wed Aug 30 10:44:43 IDT 2017
+;; MSG SIZE  rcvd: 56
+
+$ dig www.example.com -p 5053  @127.0.0.1
+
+; <<>> DiG 9.10.3-P4-Ubuntu <<>> www.example.com -p 5053 @127.0.0.1
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 53210
+;; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 0
+
+;; QUESTION SECTION:
+;www.example.com.		IN	A
+
+;; ANSWER SECTION:
+www.example.com.	10800	IN	CNAME	example.com.
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.1#5053(127.0.0.1)
+;; WHEN: Wed Aug 30 10:45:03 IDT 2017
+;; MSG SIZE  rcvd: 47
+```
+
