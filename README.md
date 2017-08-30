@@ -109,9 +109,14 @@ type=module
 #opt1=val1
 #opt2=val2
 ##options are documented at module code.
-module_name=zonefile
+module_name=zonefile #name of the python module to load.
 zone_file=<path to the zone file>
 ```
+**Module Loading:**
+
+The module_name value is passed to the python imp module to the imp.find_module to search the module file so make sure that a python
+so make sure that a python module with the file name <modulename>.py is avaliable at your PYTHONPATH.
+however since the data is passed to the imp module you can use anything that will satisfy the imp.find_module function will work.
 
 **Example**
 
@@ -188,7 +193,9 @@ example.com.		10800	IN	A	192.0.2.12
 ;; SERVER: 127.0.0.1#5053(127.0.0.1)
 ;; WHEN: Wed Aug 30 10:43:48 IDT 2017
 ;; MSG SIZE  rcvd: 45
+```
 
+```shell
 $ dig example.com -p 5053 -t ns  @127.0.0.1
 
 ; <<>> DiG 9.10.3-P4-Ubuntu <<>> example.com -p 5053 -t ns @127.0.0.1
@@ -207,7 +214,9 @@ example.com.		10800	IN	NS	ns2.example2.com.
 ;; SERVER: 127.0.0.1#5053(127.0.0.1)
 ;; WHEN: Wed Aug 30 10:44:43 IDT 2017
 ;; MSG SIZE  rcvd: 56
+```
 
+```shell
 $ dig www.example.com -p 5053  @127.0.0.1
 
 ; <<>> DiG 9.10.3-P4-Ubuntu <<>> www.example.com -p 5053 @127.0.0.1
@@ -228,3 +237,15 @@ www.example.com.	10800	IN	CNAME	example.com.
 ;; MSG SIZE  rcvd: 47
 ```
 
+# SWAN-DNS Modules
+
+The following modules are avaliable for swan-dns 
+* zonefile - load a file at the [zone file format](https://en.wikipedia.org/wiki/Zone_file).
+* blacklist - blacklist a list of network ips resulting in blacklisting a range of network ips.
+* whitelist - whitelist a list of network ips resulting in serviceing only specific netwok ranges.
+* delay - Generate a random delay (within a specific range of miliseconds) while processing a resaponse this of course will result in a delay for answerig to the client , mostly used for testing DNS clients functionalities at long delays.
+
+# TO DO
+* Documentation on how to write a module.
+* Write tests
+* Support Python3
