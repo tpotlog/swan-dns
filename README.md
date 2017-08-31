@@ -244,6 +244,34 @@ The following modules are avaliable for swan-dns
 * whitelist - whitelist a list of network ips resulting in serviceing only specific netwok ranges.
 * delay - Generate a random delay (within a specific range of miliseconds) while processing a resaponse this of course will result in a delay for answerig to the client , mostly used for testing DNS clients functionalities at long delays.
 
+# Writing s SWAN-DNS module
+
+Every SWAN-DNS module is baiclly a class which inherits from swandns.modules.BaseResolvingModule
+
+## The swandns.modules.BaseResolvingModule class
+
+The swandns.modules.BaseResolvingModule class has several things to notice when creating a resolver class which inherits it.
+
+### The __init__ methods
+The ```__init__``` method recives 3 attributes.
+1. **conf** - A dict that holds all the module configurations , the zone attribute is automaticlly populated by the server and overrun if already defined.
+2. **zone_resolver** - By default is set to True , if defined than the module will check if the zone key was defined at the conf dict.
+3. **lock_reslution** - should the resolution function lock thereads until resolution is done (or error occured).
+
+### The ```setup``` function ###
+The setup method is called right after configurations have been saven at the ```__init__``` method.
+This is the place to do some initial setups, to do so simply overrid it.
+
+### The ```inital_validate``` method ###
+The ```inital_validate``` method is called after the setup method have been called at the ```__init__``` method.
+This is the place to do some inital validation of th configuration input (the configurations are stored at self.conf).
+
+### The ```_resolve``` method ###
+The ```_resolve``` method is a method where you should write your resolution code.
+It is called for every resolution request and will get 3 attributes.
+
+
+
 # TO DO
 * Documentation on how to write a module.
 * Write tests
