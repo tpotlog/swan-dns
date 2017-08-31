@@ -269,8 +269,22 @@ This is the place to do some inital validation of th configuration input (the co
 ### The ```_resolve``` method ###
 The ```_resolve``` method is a method where you should write your resolution code.
 It is called for every resolution request and will get 3 attributes.
+1. **dns_request** - The dns request object (an object from the type of dnslib.DNSRequest).
+2. **dns_response** - The response object (an object from the type of dnslib.DNSRequest).
+3. **request_info** - The original request handler which is based on SocketServer handler.
 
+You do not have to worry about locking threads since if the lock_resolution attribute was specified at the ```__init__``` method this function is thread safe.
 
+## Export your resolver module ##
+Every resolver module should exists in one python module and one python module can hold (more exact exports) only one resolution module.
+
+This is done by setting the module attribute resolver to the class that implements the resolution.
+
+### Things To notice ###
+
+* When the server loads the modules it actually loads the class and create an object from this class with a specifc attributes for each zone.
+
+* During resolution please take into account that you are working on the same python object as the next thread than will work on so please make sure to be very careful about object changes.
 
 # TO DO
 * Documentation on how to write a module.
