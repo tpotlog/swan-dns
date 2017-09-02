@@ -215,7 +215,7 @@ class DNSRequestHandler(SocketServer.BaseRequestHandler):
                     return 
                 except:
                     self.log('Error occured processing dns label %s' %get_dns_label(self.dns_data))
-                    break
+                    raise 
                 
         except SWAN_NoSuchZoneError:
             self.log_warn('DNS zone for dns request %s was not found' %(self.dns_data.q.qname.idna()))
