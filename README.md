@@ -286,6 +286,137 @@ This is done by setting the module attribute resolver to the class that implemen
 
 * During resolution please take into account that you are working on the same python object as the next thread than will work on so please make sure to be very careful about object changes.
 
+## Exceptions handling ##
+Any exception whihc will be raised by the module during resolution will be cought and process by the server.
+While most exceptions will be logged a module can raise several exceptions which will detarmain the response sent back to the client.
+
+1. **swandns.swan_errors.exceptions.SWAN_StopProcessingRequest** - If this exception is throwen while requesting a process than the DNS server will stop the processing and return the dns response object to the client.
+2. **swandns.swan_errors.exceptions.SWAN_DropAnswer** - If this exception is throwen while requesting a process than the DNS server will stop the processing and will not return the dns response object to the client.
+3. **swandns.swan_errors.exceptions.SWAN_SkipProcessing** - If this exception is throwen while requesting a process than the DNS server will just ignore it and continue to process to the other module.
+
+## Example: A module which filter requests according to the record type ##
+This module will filter requests which only matches a specific record types if the module detects that the query type is not according to a given record types than nothing is returned to the client.
+
+
+Module code resides under /home/tpotlog/swan-modules/records_filter.py 
+
+```python
+from swandns.modules import BaseResolvingModule
+from swandns.swan_errors.exceptions import SWAN_ConfigurationError,SWAN_DropAnswer
+from dnslib import QTYPE as qtypes
+
+class RecordTypeFilterResolver(BaseResolvingModule):
+
+    def __init__(self,conf):
+        super(RecordTypeFilterResolver,self).__init__(conf=conf,zone_resolver=False,lock_reslution=False)
+
+    def inital_validate(self):
+        """Verify configuration input.
+
+        * allowed_record_types - List of record types which are allowed to be processed, "," is to be used as delimiter. 
+
+        :returns: None.
+        :rtype: None.
+
+        """
+        if not 'allowed_record_types' in self.conf:
+            raise SWAN_ConfigurationError('allowed_record_types must be defined for this module')
+        self.allowed_record_types=self.conf['allowed_record_types'].split(',')
+
+    def _resolve(self,dns_request,dns_response,request_info):
+        if not qtypes[dns_request.q.qtype] in self.allowed_record_types:
+            #if the record does not match drop the answer
+            raise SWAN_DropAnswer
+
+#export the resolving module
+resolver=RecordTypeFilterResolver
+```
+
+The ini configuration file /var/tmp/swan-dns.ini.
+Please pay attenton to the modules_paths=/home/tpotlog/swan-modules/ server attribute this means that modules will be also searched in this directory.
+ 
+```ini
+[server]
+port=5053
+address=0.0.0.0
+logfile=/var/tmp/swan-dns.log
+modules_paths=/home/tpotlog/swan-modules/
+zone.example.com=limit-records,zonefile.example.com
+loglevel=debug
+[zonefile.example.com]
+type=module
+module_name=swandns/modules/zonefile
+zone_file=/var/tmp/example.com.zonefile
+
+[limit-records]
+type=module
+module_name=records_filter
+allowed_record_types=A,CNAME,NS
+```
+
+
+Running the server
+```shell
+$ python
+Python 2.7.13 (default, Jan 19 2017, 14:48:08) 
+[GCC 6.3.0 20170118] on linux2
+Type "help", "copyright", "credits" or "license" for more information.
+>>> from swandns.utils.config import load_from_ini_file
+>>> srv=load_from_ini_file('/var/tmp/swan-dns.ini')
+>>> srv.serve_forever()
+```
+
+Asking for records which can be resolved
+
+```shell
+$ dig example.com -p 5053 -t a @127.0.0.1
+
+; <<>> DiG 9.10.3-P4-Ubuntu <<>> example.com -p 5053 -t a @127.0.0.1
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 29692
+;; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 0
+
+;; QUESTION SECTION:
+;example.com.			IN	A
+
+;; ANSWER SECTION:
+example.com.		10800	IN	A	192.0.2.12
+
+;; Query time: 1 msec
+;; SERVER: 127.0.0.1#5053(127.0.0.1)
+;; WHEN: Sat Sep 02 15:17:17 IDT 2017
+;; MSG SIZE  rcvd: 45
+```
+```shell
+$ dig example.com -p 5053 -t NS @127.0.0.1
+
+; <<>> DiG 9.10.3-P4-Ubuntu <<>> example.com -p 5053 -t NS @127.0.0.1
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 22445
+;; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 0
+
+;; QUESTION SECTION:
+;example.com.			IN	NS
+
+;; ANSWER SECTION:
+example.com.		10800	IN	NS	ns2.example2.com.
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.1#5053(127.0.0.1)
+;; WHEN: Sat Sep 02 15:17:46 IDT 2017
+;; MSG SIZE  rcvd: 56
+```
+Asking for records which can be resolved
+```shell
+$ dig example.com -p 5053 -t SRV  @127.0.0.1
+
+; <<>> DiG 9.10.3-P4-Ubuntu <<>> example.com -p 5053 -t SRV @127.0.0.1
+;; global options: +cmd
+;; connection timed out; no servers could be reached
+```
+
 # TO DO
 * Documentation on how to write a module.
 * Write tests
