@@ -418,6 +418,6 @@ $ dig example.com -p 5053 -t SRV  @127.0.0.1
 ```
 
 # TO DO
-* Documentation on how to write a module.
+* ~~Documentation on how to write a module.~~
 * Write tests
 * Support Python3
